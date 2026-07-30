@@ -51,7 +51,7 @@ module vrm_ram_core #(
 
         // ==============================================================
         // MODE 1: AUTO-PACKING STANDAR (8-bit, 16-bit, 32-bit -> 64-bit)
-        // Aman dari Parity Hazard karena rasionya genap (8:1, 4:1, 2:1)
+        // Safe from Parity Hazard because the ratio is even (8:1, 4:1, 2:1)
         // ==============================================================
         if (DATA_WIDTH == 8 || DATA_WIDTH == 16 || DATA_WIDTH == 32) begin : gen_packed_ram_64
             
@@ -104,7 +104,7 @@ module vrm_ram_core #(
 
         // ==============================================================
         // MODE 2: SPECIAL CASE (9-bit, 18-bit, 36-bit -> 72-bit)
-        // Memanfaatkan bit parity BRAM secara native (Rasio 8:1, 4:1, 2:1)
+        // Utilize native FPGA BRAM bits for optimal utilization (Ratio 8:1, 4:1, 2:1)
         // ==============================================================
         end else if (DATA_WIDTH == 9 || DATA_WIDTH == 18 || DATA_WIDTH == 36) begin : gen_packed_ram_72_even
             
@@ -156,9 +156,9 @@ module vrm_ram_core #(
             end
 
         // ==============================================================
-        // MODE 3: BYPASS (Data >= 64-bit ATAU ukuran aneh spt 12, 17, 33-bit)
-        // Sebagai Jaring Pengaman (Catch-All). Daripada error sintesis LSB_BITS, 
-        // biarkan Vivado memetakan langsung (waste bandwidth sedikit tidak apa-apa).
+        // MODE 3: BYPASS (Data >= 64-bit OR unusual sizes like 12, 17, 33-bit)
+        // Catch-all bypass mode. To avoid synthesis errors due to LSB_BITS, 
+        // let Vivado map directly (slight waste of bandwidth is acceptable).
         // ==============================================================
         end else begin : gen_native_ram
             
