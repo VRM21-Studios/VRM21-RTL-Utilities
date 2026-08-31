@@ -1,5 +1,33 @@
 `timescale 1ns / 1ps
 
+// ============================================================================
+// Testbench   : tb_vrm_dsp_core
+// Description : Functional verification of the VRM DSP Core across all
+//               supported arithmetic operating modes.
+//
+// Test Coverage:
+//   - Multiplication (MUL) mode
+//   - Multiply-add (MADD) mode
+//   - Multiply-accumulate (MAC) mode
+//   - Addition (ADD) mode
+//   - Dynamic operating-mode switching
+//   - Clock-enable behavior
+//   - MAC accumulation clear operation
+//
+// Features:
+//   - Automatic result checking against expected values
+//   - Pipeline-aware expected-value tracking
+//   - Configurable input stimulus through a dedicated task
+//   - Clock-enable and valid-signal verification
+//   - VCD waveform generation for simulation analysis
+//
+// Notes:
+//   - The expected-value pipeline is aligned with the DUT data latency.
+//   - Input stimulus is applied on the falling clock edge to provide stable
+//     inputs before the active clock edge.
+//   - The testbench reports individual PASS/ERROR results and a final summary.
+// ============================================================================
+
 module tb_vrm_dsp_core;
 
     // =========================================================================
