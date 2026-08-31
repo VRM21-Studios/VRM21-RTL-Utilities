@@ -1,5 +1,35 @@
 `timescale 1ns / 1ps
 
+// ============================================================================
+// Testbench   : tb_vrm_tdp_ram
+// Description : Dual-port RAM verification using two independent clock
+//               domains for simultaneous memory access testing.
+//
+// Test Coverage:
+//   - Port A write followed by Port B read
+//   - Port B write followed by Port A read
+//   - Simultaneous dual-port write operations
+//   - Simultaneous cross-port read operations
+//   - Burst write and read operations
+//   - Write-write address collision
+//   - Read-during-write hazard
+//
+// Features:
+//   - Independent clock domains for Port A and Port B
+//   - Dedicated read and write stimulus tasks for each port
+//   - Parallel dual-port access testing
+//   - Block RAM inference configuration
+//   - VCD waveform generation for simulation analysis
+//
+// Notes:
+//   - Port A operates at a 100 MHz clock rate.
+//   - Port B operates at approximately 142 MHz.
+//   - Collision scenarios are intentionally included to observe the behavior
+//     of the inferred FPGA memory under concurrent access conditions.
+//   - Read-during-write behavior may depend on the target FPGA memory
+//     implementation and its configured inference mode.
+// ============================================================================
+
 module tb_vrm_tdp_ram();
 
     // =========================================================================
