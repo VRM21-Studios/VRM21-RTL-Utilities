@@ -1,5 +1,34 @@
 `timescale 1ns / 1ps
 
+// ============================================================================
+// Testbench   : tb_vrm_fifo
+// Description : Functional and stress verification of the VRM FIFO using
+//               AXI4-Stream producer and consumer interfaces.
+//
+// Test Coverage:
+//   - FIFO backpressure behavior
+//   - Full-condition recovery through concurrent data consumption
+//   - Continuous push operation
+//   - Continuous pop operation
+//   - Simultaneous push and pop streaming
+//   - TLAST propagation
+//   - Almost-full status monitoring
+//
+// Features:
+//   - AXI4-Stream stimulus through a dedicated push task
+//   - Backpressure handling when the FIFO is full
+//   - Concurrent producer and consumer processes
+//   - Real-time almost-full status monitoring
+//   - VCD waveform generation for simulation analysis
+//
+// Notes:
+//   - The FIFO depth is configured to 16 entries for stress testing.
+//   - The first scenario intentionally exceeds the FIFO capacity to verify
+//     backpressure and recovery behavior.
+//   - Input signals are driven on the falling clock edge to avoid race
+//     conditions with the DUT.
+// ============================================================================
+
 module tb_vrm_fifo;
 
     localparam DATA_WIDTH = 32;
