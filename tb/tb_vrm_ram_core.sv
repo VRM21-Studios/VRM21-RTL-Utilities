@@ -1,5 +1,34 @@
 `timescale 1ns / 1ps
 
+// ============================================================================
+// Testbench   : tb_vrm_ram_core
+// Description : Functional and stress verification of the VRM RAM Core,
+//               including basic access, burst operation, and memory hazards.
+//
+// Test Coverage:
+//   - Basic write and read operation
+//   - Consecutive burst writes
+//   - Pipelined read operation
+//   - Read-during-write hazard
+//   - Post-hazard data verification
+//
+// Features:
+//   - Dedicated write and read stimulus tasks
+//   - Synchronous memory access verification
+//   - Burst write and pipelined read testing
+//   - Real-time read-data monitoring
+//   - Block RAM inference configuration
+//   - VCD waveform generation for simulation analysis
+//
+// Notes:
+//   - Input signals are driven on the falling clock edge to provide sufficient
+//     setup time before the active clock edge.
+//   - The read interface is verified using the registered output behavior of
+//     the DUT.
+//   - The read-during-write scenario is included to observe the behavior of
+//     the inferred FPGA memory during simultaneous read and write access.
+// ============================================================================
+
 module tb_vrm_ram_core;
 
     parameter DATA_WIDTH = 32;
