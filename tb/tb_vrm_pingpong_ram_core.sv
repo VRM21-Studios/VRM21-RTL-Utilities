@@ -1,5 +1,33 @@
 `timescale 1ns / 1ps
 
+// ============================================================================
+// Testbench   : tb_vrm_pingpong_ram_core
+// Description : Functional verification of the VRM Ping-Pong RAM Core for
+//               background coefficient updates and bank switching.
+//
+// Test Coverage:
+//   - Initial active read bank verification
+//   - Background coefficient loading into the inactive bank
+//   - Bank switching during operation
+//   - Immediate read access after bank switching
+//   - Background update of the alternate memory bank
+//   - Repeated bank switching and data verification
+//
+// Features:
+//   - Dedicated write and read stimulus tasks
+//   - Ping-pong bank switching verification
+//   - Background memory update simulation
+//   - Registered read-output monitoring
+//   - VCD waveform generation for simulation analysis
+//
+// Notes:
+//   - The testbench uses a 16-bit data width and a depth of 16 locations.
+//   - The inactive bank is updated while the active bank remains available
+//     for read operations.
+//   - Bank switching is explicitly triggered through the switch_bank input.
+//   - The output monitor accounts for the registered RAM read behavior.
+// ============================================================================
+
 module tb_vrm_pingpong_ram_core;
 
     // =========================================================================
