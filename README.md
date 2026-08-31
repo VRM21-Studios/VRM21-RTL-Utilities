@@ -1,32 +1,35 @@
-# VRM RTL Library
+# VRM21 RTL Utilities
 
 A collection of reusable, parameterized **Verilog RTL building blocks** for FPGA-based digital systems, DSP pipelines, memory infrastructure, and streaming architectures.
 
-This repository is intended to provide a common RTL foundation for projects developed by **VRM21 Studios**, with an emphasis on:
+This repository provides common low-level RTL infrastructure used across projects developed by **VRM21 Studios**, with an emphasis on:
 
-* Parameterized and reusable hardware modules
-* FPGA-oriented memory utilization
+* Reusable and parameterized hardware modules
+* FPGA-oriented memory and resource utilization
 * Deterministic synchronous datapaths
-* Streaming data processing
-* Fixed-point arithmetic building blocks
-* Clean separation between infrastructure and application-specific logic
+* Streaming data movement and flow control
+* Fixed-point and integer arithmetic infrastructure
+* Modular hardware composition
+* Clear separation between infrastructure and application-specific logic
 
-The modules in this repository are designed primarily for **AMD/Xilinx Vivado-based FPGA development**, while maintaining a generic RTL structure where practical.
+The modules are developed primarily with **AMD/Xilinx Vivado** and FPGA-oriented RTL flows in mind, while maintaining generic Verilog structures where practical.
 
 ---
 
 ## Repository Scope
 
-This repository contains reusable RTL infrastructure and low-level processing cores that can be used as dependencies by larger FPGA projects.
+This repository contains low-level RTL infrastructure intended to be reused as building blocks or dependencies by larger FPGA and digital hardware projects.
 
-The current scope includes:
+The current repository scope covers:
 
 * Memory infrastructure
 * Streaming infrastructure
 * DSP arithmetic infrastructure
-* Utility RTL modules
+* General-purpose RTL utilities
 
-Higher-level applications such as complete audio effects, synthesizers, NPU architectures, and research-specific processing blocks are maintained separately.
+Application-specific architectures such as complete audio effects, processor systems, NPUs, synthesizers, and research-specific processing blocks are maintained in separate repositories.
+
+The purpose of this repository is to avoid repeatedly implementing common low-level hardware infrastructure across those projects.
 
 ---
 
@@ -36,45 +39,43 @@ Higher-level applications such as complete audio effects, synthesizers, NPU arch
 
 #### `vrm_ram_core`
 
-Parameterized synchronous RAM core with automatic data-width packing.
+Parameterized synchronous RAM core with configurable memory implementation style and data-width-aware physical packing.
 
-Main characteristics:
+Main characteristics include:
 
 * Parameterized data width
 * Parameterized address width
-* Configurable Vivado RAM inference style
-* Automatic packing for selected data widths
-* 72-bit packing mode for 9-bit, 18-bit, and 36-bit data
-* 72-bit / 144-bit packing mode for 24-bit and 48-bit data
-* 64-bit packing mode for 8-bit, 16-bit, and 32-bit data
-* Native-width mode for wide or non-standard data widths
+* Configurable memory implementation style
+* FPGA-oriented RAM inference
+* Data-width-dependent physical packing
+* Support for several common FPGA memory packing configurations
 * Synchronous read behavior
 * Simulation-time memory initialization
 
-The module is intended to provide a reusable memory abstraction while allowing the physical FPGA memory organization to be adapted to the selected data width.
+The core provides a logical memory interface while allowing the physical organization of the underlying memory array to be adapted according to the selected data width and implementation style.
+
+See [`docs/architecture.md`](docs/architecture.md) and [`docs/design_rationale.md`](docs/design_rationale.md) for architectural details.
 
 ---
 
 #### `vrm_tdp_ram_core`
 
-Parameterized true dual-port RAM core with independent clocks and automatic data-width packing.
+Parameterized true dual-port RAM core with independent clocks and configurable memory implementation style.
 
-Main characteristics:
+Main characteristics include:
 
 * Independent Port A and Port B
 * Independent clocks
 * Independent write enables
 * Synchronous read outputs
 * Shared physical memory array
-* Configurable Vivado RAM inference style
-* 72-bit packing mode for 9-bit, 18-bit, and 36-bit data
-* 72-bit / 144-bit packing mode for 24-bit and 48-bit data
-* 64-bit packing mode for 8-bit, 16-bit, and 32-bit data
-* Native-width mode for unsupported or non-standard data widths
+* Configurable RAM inference style
+* Data-width-aware memory packing
+* Independent logical address mapping for each port
 
-Each port independently maps a logical user address to the corresponding physical memory word and, when applicable, the logical data chunk within the packed word.
+Both ports access the same physical memory resource. Consequently, simultaneous accesses to the same physical memory location require consideration of the target FPGA memory primitive and synthesis configuration.
 
-Concurrent access to the same physical memory location from both ports should be treated according to the target FPGA memory primitive behavior. Collision behavior is not currently specified as a deterministic architectural guarantee.
+Collision behavior is therefore not treated as a deterministic architectural guarantee unless explicitly documented for a particular implementation.
 
 ---
 
@@ -82,9 +83,9 @@ Concurrent access to the same physical memory location from both ports should be
 
 #### `vrm_fifo`
 
-Parameterized AXI4-Stream FIFO with First-Word Fall-Through (FWFT) behavior.
+Parameterized **AXI4-Stream FIFO** with First-Word Fall-Through (FWFT) behavior.
 
-Main characteristics:
+Main characteristics include:
 
 * Parameterized payload width
 * Parameterized FIFO depth
@@ -92,21 +93,22 @@ Main characteristics:
 * AXI4-Stream master interface
 * `TVALID` / `TREADY` handshake support
 * `TLAST` preservation
-* Distributed RAM / LUTRAM inference
-* Combinational memory read path for FWFT behavior
-* Occupancy tracking
+* Distributed RAM / LUTRAM-oriented implementation
+* Combinational memory read path for FWFT operation
+* FIFO occupancy tracking
 * Almost-full flow-control indication
 
-FIFO memory stores the AXI4-Stream payload and `TLAST` flag together:
+The FIFO stores the AXI4-Stream payload together with its associated `TLAST` flag.
+
+Conceptually:
 
 ```text
-[DATA_WIDTH]     -> TLAST
-[DATA_WIDTH-1:0] -> TDATA
++------------------+--------+
+|      TDATA       | TLAST  |
++------------------+--------+
 ```
 
-The `s_axis_almost_full` signal is asserted when the FIFO occupancy reaches the configured threshold of two or fewer remaining entries.
-
-This module is intended for buffering and flow-control applications in streaming DSP and FPGA pipelines.
+The module is intended for buffering, packet/frame preservation, and flow-control applications in streaming FPGA pipelines.
 
 ---
 
@@ -114,7 +116,7 @@ This module is intended for buffering and flow-control applications in streaming
 
 #### `vrm_dsp_core`
 
-Parameterized pipelined DSP arithmetic core with runtime operation-mode selection.
+Parameterized pipelined DSP arithmetic core with runtime-selectable operation modes.
 
 Supported operations:
 
@@ -125,107 +127,121 @@ Supported operations:
 |    `2'b10` | MAC       | Multiply-Accumulate |
 |    `2'b11` | ADD       | Addition            |
 
-Main characteristics:
+Main characteristics include:
 
 * Parameterized A, B, and P widths
 * Runtime-selectable operation mode
 * Three-stage pipelined datapath
-* Fixed valid pipeline latency
+* Deterministic pipeline latency
 * Clock-enable based pipeline control
-* Explicit MAC accumulator clear control
+* Explicit accumulator clear control
 * Signed arithmetic
-* DSP inference guidance through `use_dsp = "yes"`
+* FPGA DSP inference guidance
 
-Pipeline structure:
+The datapath is organized conceptually as:
 
 ```text
-Stage 1
 Input Capture
-    |
-    v
-Stage 2
-Multiplication + Operand Alignment
-    |
-    v
-Stage 3
-ALU Mode Selection + MAC Accumulation
-    |
-    v
+      |
+      v
+Multiplication / Operand Alignment
+      |
+      v
+Operation Selection / Accumulation
+      |
+      v
 Output
 ```
 
-The `acc_clr` control allows the MAC operation to start a new accumulation sequence from the current multiplication result.
+The `acc_clr` control allows a MAC sequence to begin a new accumulation period.
 
-The core is designed as a reusable arithmetic building block for larger DSP datapaths where runtime operation selection and deterministic pipeline timing are required.
+The core is intended as reusable arithmetic infrastructure for larger DSP datapaths where deterministic timing and FPGA DSP resource inference are important.
 
 ---
 
-## Common Design Conventions
+## Design Conventions
 
-The modules in this repository generally follow the following conventions:
+The RTL in this repository generally follows a common set of conventions to simplify integration across projects.
 
 ### Reset
 
-Reset signals are active-low and are named according to the interface context:
+Reset signals are generally active-low and use names such as:
 
 * `rstn`
 * `aresetn`
 
-The reset behavior is synchronous unless explicitly stated otherwise.
+The exact reset behavior is module-specific and is documented in the corresponding module documentation.
 
-### Enable and Handshake
+---
 
-Pipeline and streaming modules use explicit enable or handshake signals where appropriate.
+### Clock Enable and Valid Control
 
-Examples:
+Where applicable, datapath modules use explicit control signals such as:
 
-* `ce` for datapath clock enable
-* `valid_in` / `valid_out` for data validity tracking
-* AXI4-Stream `TVALID` / `TREADY` for transfer control
+* `ce`
+* `valid_in`
+* `valid_out`
+
+These signals are used to control datapath activity and maintain deterministic relationships between data and pipeline stages.
+
+---
+
+### AXI4-Stream Interfaces
+
+Streaming modules follow the standard AXI4-Stream transfer convention:
+
+```text
+Transfer occurs when:
+
+TVALID && TREADY
+```
+
+Modules that carry packet or frame boundaries preserve `TLAST` alongside the corresponding data element.
+
+---
 
 ### Parameterization
 
-Modules are designed to expose important architectural parameters such as:
+Important architectural characteristics are exposed through module parameters where practical, including:
 
 * Data width
 * Address width
 * Memory depth
 * FIFO depth
 * DSP operand width
+* Output width
 * Memory implementation style
 
-This allows the same RTL core to be reused across different FPGA designs.
+The intent is to allow a single RTL implementation to support multiple system configurations.
 
-### FPGA Memory Inference
+---
 
-Where appropriate, memory implementations use Vivado synthesis attributes such as:
+### FPGA Resource Inference
+
+FPGA-oriented modules may use synthesis attributes to guide resource inference.
+
+Examples include:
 
 ```verilog
 (* ram_style = "block" *)
 ```
 
-or:
-
-```verilog
-(* ram_style = "ultra" *)
-```
-
-or:
-
 ```verilog
 (* ram_style = "distributed" *)
 ```
 
-The selected memory style is intended to guide synthesis toward the desired FPGA memory resource.
+and other vendor-supported synthesis directives where appropriate.
+
+These attributes are implementation guidance rather than functional requirements of the logical RTL interface.
 
 ---
 
 ## Repository Structure
 
-The repository is expected to follow a structure similar to:
+The repository follows a modular structure separating RTL implementation, verification collateral, results, and documentation.
 
 ```text
-VRM-RTL-Library/
+VRM21-RTL-Utilities/
 |
 ├── rtl/
 │   ├── vrm_ram_core.v
@@ -246,128 +262,183 @@ VRM-RTL-Library/
 |
 ├── docs/
 │   ├── architecture.md
+│   ├── design_rationale.md
 │   ├── verification.md
+│   ├── limitations.md
 │   └── ...
 |
 └── README.md
 ```
 
-The exact repository structure may evolve as additional modules and verification collateral are added.
+The exact structure may evolve as additional modules and verification collateral are introduced.
 
 ---
 
-## Verification Status
+## Documentation
 
-Verification documentation is currently under development.
+Detailed design and verification information is maintained separately from the root README.
 
-Dedicated testbenches and verification results will be added for the individual modules in subsequent updates.
+The documentation set is intended to cover:
 
-The current verification process is intended to cover, where applicable:
+* Architecture and module organization
+* Design rationale and implementation trade-offs
+* Verification methodology
+* Verification results
+* Known limitations
+* Integration considerations
+* FPGA-specific implementation notes
+
+Relevant documentation should be consulted before integrating a module into a larger design.
+
+---
+
+## Verification
+
+Verification is performed primarily through RTL simulation using dedicated module-level testbenches.
+
+Depending on the module, verification may cover:
 
 * Functional correctness
 * Reset behavior
 * Boundary conditions
 * Parameterized configurations
-* Read/write behavior
+* Memory read/write behavior
+* Address mapping
+* Memory packing
+* FIFO full and empty behavior
 * AXI4-Stream handshake behavior
-* FIFO full and empty conditions
+* `TLAST` preservation
 * DSP operation modes
-* Pipeline latency and valid alignment
-* Memory packing and address mapping
+* Pipeline latency
+* Valid-data alignment
+* Accumulator behavior
 
-At this checkpoint stage, no general claim of FPGA hardware validation is made for the repository as a whole.
+Verification results are documented separately rather than treating the repository as having a single global verification status.
 
-Individual modules may have different validation levels, which will be documented separately once the corresponding testbench and implementation results are available.
+See [`docs/verification.md`](docs/verification.md) for the verification methodology and current status.
 
 ---
 
 ## Validation Levels
 
-The repository will use the following status terminology:
+The repository distinguishes simulation verification from physical FPGA validation.
 
-| Status                      | Meaning                                                                  |
-| --------------------------- | ------------------------------------------------------------------------ |
-| `Simulation Verified`       | Functional behavior verified using RTL simulation                        |
-| `Post-Synthesis Verified`   | Verified after synthesis or post-synthesis simulation                    |
-| `Timing Verified`           | Timing closure achieved for a documented target configuration            |
-| `FPGA Validated`            | Tested on physical FPGA hardware                                         |
-| `Experimental`              | Functional implementation exists but verification is incomplete          |
-| `Not Yet Validated on FPGA` | Simulation may exist, but hardware validation has not yet been completed |
+| Status                      | Meaning                                                                              |
+| --------------------------- | ------------------------------------------------------------------------------------ |
+| `Simulation Verified`       | Functional behavior verified through RTL simulation                                  |
+| `Post-Synthesis Verified`   | Behavior verified through synthesis or post-synthesis simulation                     |
+| `Timing Verified`           | Timing closure achieved for a documented target configuration                        |
+| `FPGA Validated`            | Design tested on physical FPGA hardware                                              |
+| `Experimental`              | Functional implementation exists, but verification is incomplete                     |
+| `Not Yet Validated on FPGA` | Simulation may be available, but physical FPGA validation has not yet been performed |
 
-These labels are intended to distinguish simulation results from physical FPGA validation.
+These labels are applied at the module or project level where appropriate.
+
+A successful RTL simulation should not be interpreted as evidence of physical FPGA validation.
 
 ---
 
-## Toolchain
+## Implementation and Toolchain
 
-Primary development environment:
+Primary development and implementation environment:
 
 * **AMD Vivado**
 * Verilog HDL
 * FPGA-oriented RTL simulation
+* Vendor-specific synthesis attributes where required
 
-Specific synthesis, timing, and hardware validation results will be documented together with the relevant target device and project configuration.
+Target-specific implementation results, including synthesis utilization, timing, and FPGA validation, are documented separately when available.
+
+The RTL is intended to remain structurally portable where practical, but some modules intentionally expose FPGA-specific implementation guidance to achieve predictable resource inference.
 
 ---
 
 ## Design Philosophy
 
-This repository focuses on reusable low-level RTL rather than complete end-user applications.
+The repository is intended to function as a reusable **RTL infrastructure layer** rather than as a collection of complete end-user designs.
 
-The general design approach is based on:
+The main design principles are:
 
-* Reusability
-* Parameterization
-* Explicit timing behavior
-* Deterministic data movement
-* FPGA-aware architecture
-* Modular composition
-* Separation of infrastructure and application logic
+* **Reusability** — common infrastructure should be implemented once and reused across projects.
+* **Parameterization** — important hardware characteristics should be configurable where practical.
+* **Deterministic timing** — pipeline latency and synchronous behavior should be explicit.
+* **Modular composition** — larger systems should be assembled from independently understandable building blocks.
+* **FPGA awareness** — RTL should consider practical FPGA resource inference and implementation behavior.
+* **Clear interfaces** — module boundaries should expose predictable and documented interfaces.
+* **Separation of concerns** — generic infrastructure should remain independent from application-specific algorithms whenever practical.
 
-The goal is to allow higher-level designs to reuse common building blocks instead of repeatedly implementing the same low-level infrastructure.
+This repository therefore acts as a shared low-level foundation for other VRM21 Studios hardware projects.
+
+---
+
+## Limitations
+
+The modules in this repository are not intended to provide universal technology-independent guarantees.
+
+Some implementations depend on:
+
+* FPGA memory primitive behavior
+* Vivado synthesis and inference rules
+* Target-device architecture
+* Parameter combinations
+* Clocking configuration
+* Memory collision behavior
+* Simulation-model assumptions
+
+In particular, successful RTL simulation does not guarantee successful synthesis, timing closure, or physical FPGA operation for every parameter configuration.
+
+Module-specific limitations and unsupported configurations are documented in the corresponding documentation.
+
+See [`docs/limitations.md`](docs/limitations.md).
 
 ---
 
 ## Current Status
 
-This repository is currently under active development.
+The repository is **actively maintained and expanded** as a shared RTL utility library for VRM21 Studios projects.
 
-The modules currently included should be considered a mixture of reusable building blocks and ongoing development work. Verification results, dedicated testbenches, implementation reports, and supporting documentation will be added progressively.
+The current collection contains reusable memory, streaming, and DSP infrastructure. Individual modules may have different levels of verification and hardware validation.
 
-The repository is intended to serve as a common RTL dependency for future VRM21 Studios projects, including FPGA-based DSP and other digital hardware systems.
+The status of a particular module should therefore be determined from its associated verification documentation rather than from the repository status alone.
+
+New modules, dedicated testbenches, simulation results, implementation reports, and supporting documentation will be added progressively.
 
 ---
 
 ## Roadmap
 
-Planned repository improvements include:
+Planned improvements include:
 
 * Additional reusable RTL utility modules
-* Dedicated testbenches for each core
-* Verification result documentation
+* Expanded module-level testbenches
+* More comprehensive verification result documentation
 * Simulation result archives
-* Synthesis and timing reports for representative targets
-* Expanded module documentation
-* Architecture and integration notes
-* Additional FPGA-oriented infrastructure components
+* Representative synthesis and implementation reports
+* Timing results for selected FPGA targets
+* Additional architecture documentation
+* Integration examples
+* Expanded parameterization and configuration support
+* Improved cross-repository reuse of common RTL infrastructure
 
-The roadmap may change as the library evolves.
+The roadmap may evolve as the library and its dependent projects develop.
 
 ---
 
 ## Related Projects
 
-This repository serves as a low-level RTL foundation for other VRM21 Studios FPGA projects.
+`VRM21-RTL-Utilities` is intended to serve as a low-level dependency for other projects developed by **VRM21 Studios**.
 
-Higher-level modules and application-specific implementations may be maintained in separate repositories.
+Potential consumers include projects involving:
 
-Examples include:
-
-* FPGA-based DSP processing
-* Audio processing systems
+* FPGA-based DSP
+* Audio processing
 * RISC-V processor architectures
 * FPGA accelerators
-* Research-oriented hardware implementations
+* Memory subsystems
+* Streaming data pipelines
+* Research-oriented digital hardware
+
+Application-specific functionality is intentionally kept outside this repository when it does not belong to the generic infrastructure layer.
 
 ---
 
