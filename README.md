@@ -16,6 +16,16 @@ The modules are developed primarily with **AMD/Xilinx Vivado** and FPGA-oriented
 
 ---
 
+## Motivation
+
+This repository was created to collect basic and reusable RTL building blocks developed throughout multiple hardware projects.
+
+Many larger RTL systems repeatedly require common components such as memory structures, FIFOs, buffering mechanisms, and small utility modules. Collecting these components into a dedicated repository helps reduce duplication and provides a consistent foundation for building more complex designs.
+
+The repository is therefore intended primarily as supporting infrastructure for the broader VRM21 hardware ecosystem.
+
+---
+
 ## Repository Scope
 
 This repository contains low-level RTL infrastructure intended to be reused as building blocks or dependencies by larger FPGA and digital hardware projects.
