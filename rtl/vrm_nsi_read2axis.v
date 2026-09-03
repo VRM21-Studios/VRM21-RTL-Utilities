@@ -96,3 +96,140 @@ module vrm_nsi_read2axis #(
     output wire              m_axis_tvalid,
     input  wire              m_axis_tready
 );
+    // =========================================================================
+    // FSM and Read Address Generator
+    // =========================================================================
+
+    localparam IDLE      = 2'd0,
+               READ_SRAM = 2'd1,
+               WAIT_LAST = 2'd2;
+
+    reg [1:0] state;
+    reg [ADDR_W-1:0] rd_addr_cnt;
+
+    wire fifo_almost_full;
+
+    // Pause NSI read requests when the FIFO approaches its capacity limit.
+    wire hold_read = fifo_almost_full;
+
+    always @(posedge aclk) begin
+        if (!aresetn) begin
+            state       <= IDLE;
+            rd_addr_cnt <= 0;
+        end else begin
+            case (state)
+
+                IDLE: begin
+                    if (ctrl_start_read) begin
+                        state       <= READ_SRAM;
+                        rd_addr_cnt <= 0;
+                    end
+                end
+
+                READ_SRAM: begin
+                    if (!hold_read) begin
+                        if (rd_addr_cnt == ctrl_max_addr) begin
+                            // Allow one additional cycle for the final
+                            // read-data pipeline stage.
+                            state <= WAIT_LAST;
+                        end else begin
+                            rd_addr_cnt <= rd_addr_cnt + 1;
+                        end
+                    end
+                end
+
+                WAIT_LAST: begin
+                    state <= IDLE;
+                end
+
+                default: begin
+                    state <= IDLE;
+                end
+
+            endcase
+        end
+    end
+
+
+    // =========================================================================
+    // NSI Read Request Generation
+    // =========================================================================
+
+    // Issue a read request while the controller is active and the FIFO
+    // is not approaching its configured capacity limit.
+    assign o_nsi_rd_en   = (state == READ_SRAM) && !hold_read;
+    assign o_nsi_rd_addr = rd_addr_cnt;
+
+    // The controller remains busy until all read requests, including the
+    // final pipelined read operation, have completed.
+    assign status_busy = (state != IDLE);
+
+
+    // =========================================================================
+    // NSI Read Data Synchronization Pipeline
+    // =========================================================================
+    //
+    // The NSI read interface is modeled as having a one-clock latency.
+    // Therefore, each read-enable request is delayed by one clock cycle
+    // before the returned data is presented to the FIFO.
+    //
+    // The final-read indication is propagated through the same pipeline
+    // to maintain TLAST alignment with the corresponding data sample.
+    // =========================================================================
+
+    reg rd_en_d1;
+    reg is_last_d1;
+
+    always @(posedge aclk) begin
+        if (!aresetn) begin
+            rd_en_d1   <= 0;
+            is_last_d1 <= 0;
+        end else begin
+            rd_en_d1 <= o_nsi_rd_en;
+
+            // Mark the request associated with the final configured address.
+            is_last_d1 <= o_nsi_rd_en &&
+                          (rd_addr_cnt == ctrl_max_addr);
+        end
+    end
+
+
+    // =========================================================================
+    // AXI4-Stream Egress FIFO
+    // =========================================================================
+    //
+    // The FIFO buffers returned NSI read data before forwarding it through
+    // the AXI4-Stream master interface.
+    //
+    // The almost-full indication is fed back to the read controller to
+    // temporarily pause additional NSI read requests and prevent excessive
+    // FIFO occupancy.
+    // =========================================================================
+
+    vrm_fifo #(
+        .DATA_WIDTH(DATA_W),
+        .FIFO_DEPTH(FIFO_DEPTH)
+    ) egress_fifo (
+        .aclk(aclk),
+        .aresetn(aresetn),
+
+        // Data returned by the NSI interface after the one-clock
+        // synchronization pipeline.
+        .s_axis_tdata(i_nsi_rd_data),
+        .s_axis_tlast(is_last_d1),
+        .s_axis_tvalid(rd_en_d1),
+
+        // Backpressure toward the NSI interface is controlled through
+        // fifo_almost_full and the hold_read signal.
+        .s_axis_tready(),
+
+        .s_axis_almost_full(fifo_almost_full),
+
+        .m_axis_tdata(m_axis_tdata),
+        .m_axis_tlast(m_axis_tlast),
+        .m_axis_tvalid(m_axis_tvalid),
+        .m_axis_tready(m_axis_tready)
+    );
+
+
+endmodule
