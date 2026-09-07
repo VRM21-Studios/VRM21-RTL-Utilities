@@ -19,12 +19,10 @@ VRM21 RTL Utilities
 ├── Streaming & Buffering
 │   └── AXI4-Stream FIFO
 │
-├── DSP Infrastructure
-│   └── Configurable DSP / MAC Core
-│
-└── Interface Infrastructure
-    ├── AXI4-Lite → Native MMIO
-    └── AXI4-Stream → Native Sequential Interface
+└── DSP Infrastructure
+    └── Configurable DSP / MAC Core
+
+
 ```
 
 The modules are intentionally implemented as independent building blocks rather than as a single tightly coupled subsystem.
@@ -55,7 +53,7 @@ Conceptually:
 addr -------->|                  |
 wr_data ----->|    VRM RAM       |----> rd_data
 wr_en ------->|                  |
-clk ---------->|                  |
+clk --------->|                  |
               +------------------+
 ```
 
@@ -186,79 +184,7 @@ The core is intended as a low-level arithmetic building block for larger DSP arc
 
 ---
 
-## 4. Interface Infrastructure
-
-### 4.1 AXI4-Lite to Native MMIO
-
-`vrm_axilite2nsi_mmio_64` provides a bridge between an AXI4-Lite control interface and a simpler native memory-mapped interface.
-
-The bridge separates the AXI protocol handling from the actual peripheral or register implementation.
-
-Conceptually:
-
-```text
-                AXI4-Lite
-                    |
-                    v
-          +---------------------+
-          | AXI-Lite Interface  |
-          |      Adapter        |
-          +---------------------+
-                    |
-                    v
-          +---------------------+
-          | Native MMIO         |
-          | Address/Data/Write  |
-          +---------------------+
-                    |
-                    v
-               Peripheral
-```
-
-The write and read paths are independently controlled by small state machines.
-
-This makes the bridge suitable for attaching lightweight control/status registers to a larger AXI-based system.
-
----
-
-### 4.2 AXI4-Stream to Native Sequential Interface
-
-`vrm_axis2nsi_write` converts an AXI4-Stream input into a simpler sequential write interface.
-
-The block:
-
-1. Accepts AXI4-Stream data.
-2. Buffers incoming data through the FIFO infrastructure.
-3. Generates sequential write addresses.
-4. Produces native write-enable and write-data signals.
-5. Uses `TLAST` to identify the end of a transfer.
-
-Conceptually:
-
-```text
-AXI4-Stream
-     |
-     v
-+----------+
-|   FIFO   |
-+----------+
-     |
-     v
-+------------------+
-| Address / Write  |
-| Controller       |
-+------------------+
-     |
-     +------> wr_en
-     +------> wr_addr
-     +------> wr_data
-```
-
-This structure allows an AXI4-Stream producer to write data into a simple memory-like destination without requiring the destination to implement the complete AXI4-Stream protocol.
-
----
-
-## 5. Integration Philosophy
+## 4. Integration Philosophy
 
 The utilities repository follows a layered integration model.
 
@@ -286,7 +212,7 @@ This approach reduces duplicated RTL across projects while keeping each applicat
 
 ---
 
-## 6. Clocking and Reset
+## 5. Clocking and Reset
 
 The utility modules generally operate in a synchronous single-clock domain unless explicitly stated otherwise by their individual interfaces.
 
@@ -296,7 +222,7 @@ Consequently, integration into multiple asynchronous clock domains requires an a
 
 ---
 
-## 7. FPGA-Oriented Implementation
+## 6. FPGA-Oriented Implementation
 
 The repository is designed with FPGA synthesis in mind.
 
@@ -310,7 +236,7 @@ These hints are implementation guidance rather than absolute guarantees. The fin
 
 ---
 
-## 8. Module Independence
+## 7. Module Independence
 
 Each utility is intended to have a clearly defined interface and limited assumptions about the surrounding system.
 
