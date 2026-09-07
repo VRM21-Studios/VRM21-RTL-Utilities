@@ -107,33 +107,7 @@ The FIFO should therefore be sized according to the expected burst behavior of t
 
 ---
 
-## 7. AXI4-Lite Bridge Simplicity vs. Full AXI Features
-
-The MMIO bridge is intended for lightweight control/status access.
-
-It should not be treated as a replacement for a complete high-performance AXI interconnect.
-
-The implementation favors a compact transaction state machine over support for advanced AXI system-level features.
-
----
-
-## 8. Sequential Stream Writer vs. Flexible Address Generation
-
-`vrm_axis2nsi_write` is optimized for sequential data storage.
-
-The address generation model is therefore intentionally simple.
-
-This makes the block suitable for:
-
-- Linear buffers.
-- Frame storage.
-- Sequential sample streams.
-
-It is less appropriate when the destination requires arbitrary address generation, scatter/gather behavior, or complex DMA descriptors.
-
----
-
-## 9. Common Infrastructure vs. Application-Specific Optimization
+## 7. Common Infrastructure vs. Application-Specific Optimization
 
 Using a common utility implementation improves consistency between projects.
 
@@ -159,7 +133,7 @@ The utilities repository therefore serves as a reusable baseline rather than a c
 
 ---
 
-## 10. Explicit Interfaces vs. Hidden System Assumptions
+## 8. Explicit Interfaces vs. Hidden System Assumptions
 
 The modules expose their important control and data signals explicitly.
 
@@ -169,7 +143,7 @@ The trade-off is a slightly more verbose integration interface, but the resultin
 
 ---
 
-## 11. Resource Efficiency vs. Maximum Throughput
+## 9. Resource Efficiency vs. Maximum Throughput
 
 Some modules prioritize predictable resource usage over aggressive parallelism.
 
@@ -179,7 +153,7 @@ The utility implementation should therefore be selected according to the system-
 
 ---
 
-## 12. Design Philosophy
+## 10. Design Philosophy
 
 The overall trade-off can be summarized as:
 
