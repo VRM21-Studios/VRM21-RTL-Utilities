@@ -77,35 +77,7 @@ The surrounding system remains responsible for correctly handling the AXI4-Strea
 
 ---
 
-## 7. AXI4-Lite Bridge Scope
-
-`vrm_axilite2nsi_mmio_64` is intended for lightweight MMIO/control transactions.
-
-It is not a replacement for a complete AXI interconnect or high-performance memory subsystem.
-
-Designs requiring advanced AXI features may require a dedicated interconnect or bridge.
-
----
-
-## 8. Native MMIO Timing
-
-The native-side peripheral must satisfy the bridge's expected request/response timing.
-
-A peripheral that requires additional latency must be integrated according to the bridge's native interface contract.
-
-The bridge does not automatically solve arbitrary peripheral timing requirements.
-
----
-
-## 9. AXI4-Stream Writer Addressing
-
-`vrm_axis2nsi_write` is intended primarily for sequential writes.
-
-Applications requiring arbitrary address patterns, scatter/gather transfers, or descriptor-based DMA should use a more capable address-generation architecture.
-
----
-
-## 10. Clock-Domain Crossing
+## 7. Clock-Domain Crossing
 
 The utilities are not a general-purpose CDC library.
 
@@ -115,7 +87,7 @@ Signals crossing between asynchronous clock domains require appropriate CDC hand
 
 ---
 
-## 11. Reset Assumptions
+## 8. Reset Assumptions
 
 Reset behavior is module-specific.
 
@@ -125,7 +97,7 @@ Reset should not be assumed to initialize all memory contents unless the corresp
 
 ---
 
-## 12. Parameter Combinations
+## 9. Parameter Combinations
 
 Although the modules are parameterized, not every theoretical combination of parameters is necessarily meaningful or equally well supported.
 
@@ -140,7 +112,7 @@ Parameters should therefore be validated for the intended target device.
 
 ---
 
-## 13. Simulation vs. Hardware
+## 10. Simulation vs. Hardware
 
 Successful RTL simulation does not guarantee successful FPGA implementation.
 
@@ -157,7 +129,7 @@ FPGA validation should therefore be performed when the utility is used in a hard
 
 ---
 
-## 14. No Universal Performance Guarantee
+## 11. No Universal Performance Guarantee
 
 The repository does not guarantee a specific maximum clock frequency, latency, throughput, or resource utilization for every target FPGA.
 
@@ -174,7 +146,7 @@ Performance claims should therefore be made using measurements from the actual t
 
 ---
 
-## 15. Application-Level Responsibility
+## 12. Application-Level Responsibility
 
 The utilities provide infrastructure, not complete system-level correctness.
 
