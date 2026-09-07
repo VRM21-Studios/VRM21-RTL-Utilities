@@ -21,8 +21,6 @@ VRM21 RTL Utilities
 │
 └── DSP Infrastructure
     └── Configurable DSP / MAC Core
-
-
 ```
 
 The modules are intentionally implemented as independent building blocks rather than as a single tightly coupled subsystem.
