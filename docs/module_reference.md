@@ -124,45 +124,7 @@ The module provides control over accumulation and accumulator clearing.
 
 ---
 
-## 4. AXI4-Lite Bridge
-
-### `vrm_axilite2nsi_mmio_64`
-
-AXI4-Lite to native memory-mapped interface bridge.
-
-**Primary use cases:**
-
-- Peripheral register access.
-- CPU-to-hardware control paths.
-- AXI-based system integration.
-- Lightweight MMIO peripherals.
-
-The bridge handles AXI4-Lite protocol transactions and exposes a simpler native-side interface.
-
-The write and read paths use independent control state machines.
-
----
-
-## 5. AXI4-Stream Write Bridge
-
-### `vrm_axis2nsi_write`
-
-AXI4-Stream to native sequential write interface.
-
-**Primary use cases:**
-
-- Stream-to-memory transfer.
-- Frame storage.
-- DMA-like internal datapaths.
-- Connecting AXI4-Stream producers to simple memory interfaces.
-
-The module uses the repository FIFO infrastructure to decouple stream reception from the native write side.
-
-`TLAST` is used as the transfer/frame boundary indicator.
-
----
-
-## 6. Dependency Relationships
+## 4. Dependency Relationships
 
 The main internal dependency relationships can be summarized as:
 
@@ -178,13 +140,7 @@ vrm_pingpong_ram_core   Other systems
 vrm_fifo
      |
      v
-vrm_axis2nsi_write
-
-
-vrm_axilite2nsi_mmio_64
-     |
-     v
-Native MMIO peripherals
+Streaming Data
 
 
 vrm_dsp_core
@@ -197,7 +153,7 @@ The dependency structure is intentionally shallow so that modules remain portabl
 
 ---
 
-## 7. Integration Recommendation
+## 5. Integration Recommendation
 
 When integrating a module into another repository:
 
