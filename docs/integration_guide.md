@@ -21,8 +21,6 @@ Typical mappings are:
 | Double buffering | `vrm_pingpong_ram_core` |
 | AXI4-Stream buffering | `vrm_fifo` |
 | FPGA DSP arithmetic | `vrm_dsp_core` |
-| AXI4-Lite peripheral access | `vrm_axilite2nsi_mmio_64` |
-| AXI4-Stream to sequential memory write | `vrm_axis2nsi_write` |
 
 ---
 
@@ -120,59 +118,7 @@ For frame-based transfers, `TLAST` should remain associated with the final data 
 
 ---
 
-## 7. AXI4-Lite MMIO Integration
-
-The AXI4-Lite bridge should normally sit between an AXI4-Lite master and a native register/peripheral block.
-
-Example:
-
-```text
-CPU / AXI Master
-       |
-       | AXI4-Lite
-       v
-+-------------------+
-| vrm_axilite2nsi   |
-|    _mmio_64       |
-+-------------------+
-       |
-       | Native MMIO
-       v
-+-------------------+
-| Peripheral        |
-| Registers         |
-+-------------------+
-```
-
-The peripheral should implement the native-side transaction semantics expected by the bridge.
-
----
-
-## 8. AXI4-Stream Write Integration
-
-The stream writer is appropriate when a producer generates sequential data and the destination expects a simple write interface.
-
-Example:
-
-```text
-AXI4-Stream Source
-        |
-        v
-  vrm_axis2nsi_write
-        |
-        +---- wr_addr
-        +---- wr_data
-        +---- wr_en
-        |
-        v
-   Memory / Buffer
-```
-
-The destination does not need to understand AXI4-Stream directly.
-
----
-
-## 9. Ping-Pong Buffer Integration
+## 7. Ping-Pong Buffer Integration
 
 A typical producer/consumer architecture can be structured as:
 
@@ -197,7 +143,7 @@ The system controller should ensure that a bank is not switched or reused while 
 
 ---
 
-## 10. DSP Core Integration
+## 8. DSP Core Integration
 
 The DSP core is intended to serve as an arithmetic primitive.
 
@@ -223,7 +169,7 @@ The utility does not automatically define application-level fixed-point semantic
 
 ---
 
-## 11. Verification After Integration
+## 9. Verification After Integration
 
 A utility that passes its standalone testbench should still be tested in the consuming system.
 
@@ -241,7 +187,7 @@ The purpose is to verify not only the utility itself but also the assumptions ma
 
 ---
 
-## 12. Recommended Project Structure
+## 10. Recommended Project Structure
 
 A consuming repository may organize utility dependencies as:
 
@@ -265,7 +211,7 @@ Alternatively, utilities may remain in a dedicated dependency directory if the b
 
 ---
 
-## 13. Versioning Considerations
+## 11. Versioning Considerations
 
 Because the utilities may be shared by multiple projects, changes to a utility should be treated as interface-sensitive changes.
 
@@ -282,7 +228,7 @@ A functional change in a low-level utility can affect several higher-level repos
 
 ---
 
-## 14. Integration Checklist
+## 12. Integration Checklist
 
 Before committing an integrated utility, verify:
 
@@ -300,7 +246,7 @@ Before committing an integrated utility, verify:
 
 ---
 
-## 15. Final Recommendation
+## 13. Final Recommendation
 
 The utilities should be treated as shared infrastructure.
 
