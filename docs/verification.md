@@ -127,35 +127,7 @@ The testbench is intended to detect both arithmetic errors and control-path erro
 
 ---
 
-## 7. Interface Bridge Verification
-
-The AXI4-Lite and AXI4-Stream bridge modules require protocol-oriented verification.
-
-### AXI4-Lite Bridge
-
-Important checks include:
-
-- Write address/data acceptance.
-- Write response sequencing.
-- Read request handling.
-- Read response generation.
-- Native-side request generation.
-- Transaction completion.
-
-### AXI4-Stream Write Bridge
-
-Important checks include:
-
-- `TVALID/TREADY` handshake.
-- FIFO buffering.
-- Data ordering.
-- Sequential address generation.
-- Write enable generation.
-- `TLAST` handling.
-
----
-
-## 8. Simulation Methodology
+## 7. Simulation Methodology
 
 The testbenches use synthesizable RTL modules as the device under test while simulation-only constructs are used for stimulus and checking.
 
@@ -172,7 +144,7 @@ Where practical, testbenches are self-checking rather than relying exclusively o
 
 ---
 
-## 9. Waveform Analysis
+## 8. Waveform Analysis
 
 Waveforms remain useful for diagnosing protocol and timing behavior.
 
@@ -192,7 +164,7 @@ Waveform inspection should be used primarily for debugging failures or investiga
 
 ---
 
-## 10. FPGA Validation
+## 9. FPGA Validation
 
 Simulation and FPGA validation are considered separate verification stages.
 
@@ -210,7 +182,7 @@ FPGA validation status should therefore be documented separately for each module
 
 ---
 
-## 11. Verification Status
+## 10. Verification Status
 
 The verification status of individual modules should be maintained based on the latest available testbench and hardware results.
 
@@ -222,7 +194,7 @@ It should not automatically be interpreted as complete verification of all param
 
 ---
 
-## 12. Recommended Verification Extensions
+## 11. Recommended Verification Extensions
 
 For future revisions, verification can be expanded through:
 
