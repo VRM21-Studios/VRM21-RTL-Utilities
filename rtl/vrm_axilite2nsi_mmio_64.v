@@ -1,4 +1,3 @@
-```verilog
 `timescale 1ns / 1ps
 
 // ============================================================================
@@ -358,4 +357,3 @@ module vrm_axilite2nsi_mmio_64 #(
         mmio_we_reg ? w_addr : r_addr;
 
 endmodule
-```
